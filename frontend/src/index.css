@@ -1,0 +1,219 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom slider styles */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-track {
+  background: #374151;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #6366f1;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider::-moz-range-track {
+  background: #374151;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.slider::-moz-range-thumb {
+  background: #6366f1;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Ambient Themes */
+.theme-default {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #1f2937 100%);
+}
+
+.theme-ocean {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+}
+
+.theme-ocean .bg-gray-800 {
+  background-color: rgba(30, 58, 138, 0.3);
+}
+
+.theme-ocean .bg-gray-700 {
+  background-color: rgba(30, 58, 138, 0.5);
+}
+
+.theme-forest {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #064e3b 100%);
+}
+
+.theme-forest .bg-gray-800 {
+  background-color: rgba(6, 95, 70, 0.3);
+}
+
+.theme-forest .bg-gray-700 {
+  background-color: rgba(6, 95, 70, 0.5);
+}
+
+.theme-sunset {
+  background: linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #7c2d12 100%);
+}
+
+.theme-sunset .bg-gray-800 {
+  background-color: rgba(124, 45, 18, 0.3);
+}
+
+.theme-sunset .bg-gray-700 {
+  background-color: rgba(124, 45, 18, 0.5);
+}
+
+.theme-minimal {
+  background: #000000;
+}
+
+.theme-minimal .bg-gray-800 {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.theme-minimal .bg-gray-700 {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4f46e5;
+}
+
+/* Focus ring styles */
+.focus-ring {
+  @apply focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+}
+
+/* Animation classes */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Break mode indicator */
+.break-mode-indicator {
+  position: relative;
+}
+
+.break-mode-indicator::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #10b981, #3b82f6, #8b5cf6, #f59e0b);
+  border-radius: inherit;
+  z-index: -1;
+  animation: border-glow 3s ease-in-out infinite;
+}
+
+@keyframes border-glow {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* File upload drag area */
+.drag-over {
+  border-color: #6366f1 !important;
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+/* Music player progress bar */
+.music-progress {
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  height: 4px;
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+/* Collaborative notes cursor */
+.collaborating {
+  position: relative;
+}
+
+.collaborating::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #10b981;
+  animation: cursor-blink 1s infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
