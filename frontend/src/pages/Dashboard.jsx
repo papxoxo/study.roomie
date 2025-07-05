@@ -1,23 +1,36 @@
 import { useState } from "react";
-import { BarChart3, Users, Settings, ArrowLeft } from "lucide-react";
+import { BarChart3, Users, Settings, ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import StudyStats from "../components/StudyStats";
 import Friends from "../components/Friends";
+import ProfileForm from "../components/ProfileForm";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("stats");
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
 
   const tabs = [
     { id: "stats", name: "My Stats", icon: BarChart3 },
     { id: "friends", name: "My Friends", icon: Users },
-    { id: "sessions", name: "Upcoming Sessions", icon: Settings }
+    { id: "sessions", name: "Upcoming Sessions", icon: Settings },
+    { id: "profile", name: "Profile", icon: Settings },
   ];
 
   const handleInviteFriend = (friend) => {
     // In a real app, this would send an invitation
     console.log("Inviting friend:", friend);
     alert(`Invitation sent to ${friend.name}!`);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
   };
 
   return (
@@ -35,8 +48,19 @@ export default function Dashboard() {
               </button>
               <div>
                 <h1 className="text-xl font-bold text-white">Dashboard</h1>
-                <p className="text-gray-400 text-sm">Track your progress and manage friends</p>
+                <p className="text-gray-400 text-sm">
+                  Welcome back, {currentUser?.displayName || currentUser?.email}
+                </p>
               </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-medium transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
@@ -103,6 +127,9 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          )}
+          {activeTab === "profile" && (
+            <ProfileForm />
           )}
         </div>
       </div>

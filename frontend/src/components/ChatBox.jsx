@@ -1,21 +1,37 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, MessageCircle, Lock, Unlock } from "lucide-react";
 import { socket } from "../socket";
+import { db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function ChatBox({ roomId, isBreakMode = false }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
+  const [socketId, setSocketId] = useState(null);
+  const [avatars, setAvatars] = useState({});
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
+    setSocketId(socket.id);
+    const onConnect = () => setSocketId(socket.id);
+    socket.on("connect", onConnect);
+    return () => socket.off("connect", onConnect);
+  }, []);
+
+  useEffect(() => {
     const onMsg = (data) => {
-      setMessages(m => [...m, data]);
+      setMessages(m => [
+        ...m,
+        {
+          ...data,
+          isOwn: data.userId === socket.id
+        }
+      ]);
     };
-    
     socket.on("chat_msg", onMsg);
     return () => socket.off("chat_msg", onMsg);
   }, []);
@@ -24,9 +40,39 @@ export default function ChatBox({ roomId, isBreakMode = false }) {
     scrollToBottom();
   }, [messages]);
 
+  // Fetch avatars for all userIds in messages
+  useEffect(() => {
+    async function fetchAvatars() {
+      const userIds = Array.from(new Set(messages.map(m => m.userId)));
+      const newAvatars = { ...avatars };
+      await Promise.all(userIds.map(async (uid) => {
+        if (uid && !newAvatars[uid]) {
+          const snap = await getDoc(doc(db, "users", uid));
+          if (snap.exists()) {
+            newAvatars[uid] = snap.data().avatar;
+          }
+        }
+      }));
+      setAvatars(newAvatars);
+    }
+    if (messages.length > 0) fetchAvatars();
+    // eslint-disable-next-line
+  }, [messages]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (newMessage.trim() && isBreakMode) {
+      // Optimistically add the message to the chat
+      setMessages(m => [
+        ...m,
+        {
+          userId: socket.id,
+          username: socket.username || "You",
+          message: newMessage,
+          isOwn: true,
+          timestamp: new Date()
+        }
+      ]);
       socket.emit("chat_msg", { roomId, message: newMessage });
       setNewMessage("");
     }
@@ -77,8 +123,13 @@ export default function ChatBox({ roomId, isBreakMode = false }) {
           messages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+              className={`flex items-end gap-2 ${message.isOwn ? "justify-end" : "justify-start"}`}
             >
+              <img
+                src={avatars[message.userId] || "https://api.dicebear.com/7.x/bottts/svg?seed=default"}
+                alt="avatar"
+                className="w-8 h-8 rounded-full border-2 border-indigo-500 bg-gray-700"
+              />
               <div
                 className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
                   message.isOwn
@@ -86,7 +137,7 @@ export default function ChatBox({ roomId, isBreakMode = false }) {
                     : "bg-gray-700 text-white"
                 }`}
               >
-                <div className="text-xs opacity-75 mb-1">{message.userId || "Anonymous"}</div>
+                <div className="text-xs opacity-75 mb-1">{message.username || message.userId || "Anonymous"}</div>
                 <div>{message.message}</div>
               </div>
             </div>

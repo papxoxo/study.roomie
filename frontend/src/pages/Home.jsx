@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Users, Video, Clock, MessageCircle, Zap, BarChart3 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
   const [roomId, setRoomId] = useState("");
   const [username, setUsername] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -14,20 +16,33 @@ export default function Home() {
   };
 
   const createRoom = () => {
-    if (!username.trim()) {
-      alert("Please enter your name");
+    if (!currentUser) {
+      navigate('/signin');
       return;
     }
     const id = roomId || Math.random().toString(36).substring(2, 8).toUpperCase();
-    navigate(`/room/${id}?username=${encodeURIComponent(username)}&host=true`);
+    navigate(`/room/${id}?username=${encodeURIComponent(currentUser.displayName || currentUser.email)}&host=true`);
   };
 
   const joinRoom = () => {
-    if (!roomId.trim() || !username.trim()) {
-      alert("Please enter both room ID and your name");
+    if (!currentUser) {
+      navigate('/signin');
       return;
     }
-    navigate(`/room/${roomId}?username=${encodeURIComponent(username)}&host=false`);
+    if (!roomId.trim()) {
+      alert("Please enter a room ID");
+      return;
+    }
+    navigate(`/room/${roomId}?username=${encodeURIComponent(currentUser.displayName || currentUser.email)}&host=false`);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
   };
 
   return (
@@ -35,14 +50,48 @@ export default function Home() {
       {/* Header */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <div></div>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-white font-medium transition-colors"
-          >
-            <BarChart3 className="w-4 h-4" />
-            Dashboard
-          </button>
+          <div className="flex gap-4">
+            <Link
+              to="/how-it-works"
+              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-white font-medium transition-colors"
+            >
+              How it Works
+            </Link>
+          </div>
+          <div className="flex gap-4">
+            {currentUser ? (
+              <>
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-white font-medium transition-colors"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  Dashboard
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-medium transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/signin"
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-white font-medium transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
         </div>
         
         <div className="text-center mb-12">
@@ -81,58 +130,69 @@ export default function Home() {
         {/* Room Controls */}
         <div className="max-w-md mx-auto">
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-8 border border-gray-700">
-            <h2 className="text-2xl font-semibold mb-6 text-center">Join or Create Room</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-center">
+              {currentUser ? 'Join or Create Room' : 'Get Started'}
+            </h2>
             
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Your Name
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your name"
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400"
-                />
-              </div>
+            {currentUser ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Room ID
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={roomId}
+                      onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                      placeholder="Enter room ID"
+                      className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400"
+                    />
+                    <button
+                      onClick={generateRoomId}
+                      className="px-4 py-3 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                    >
+                      Generate
+                    </button>
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Room ID
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={roomId}
-                    onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                    placeholder="Enter room ID"
-                    className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400"
-                  />
+                <div className="flex gap-3 pt-4">
                   <button
-                    onClick={generateRoomId}
-                    className="px-4 py-3 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                    onClick={joinRoom}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors"
                   >
-                    Generate
+                    Join Room
+                  </button>
+                  <button
+                    onClick={createRoom}
+                    className="flex-1 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    Create Room
                   </button>
                 </div>
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={joinRoom}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Join Room
-                </button>
-                <button
-                  onClick={createRoom}
-                  className="flex-1 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Create Room
-                </button>
+            ) : (
+              <div className="text-center space-y-4">
+                <p className="text-gray-400 mb-6">
+                  Sign in to create or join study rooms with your friends
+                </p>
+                <div className="flex gap-3">
+                  <Link
+                    to="/signin"
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="flex-1 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

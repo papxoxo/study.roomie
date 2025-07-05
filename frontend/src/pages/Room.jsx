@@ -56,7 +56,7 @@ export default function Room() {
     
     socket.on("timer_update", (s) => {
       setState(s);
-      setIsBreakMode(s.mode === "break");
+      setIsBreakMode(s.mode !== "focus");
       setIsRunning(s.mode === "focus" || s.mode === "break");
       
       // Play notification sound and show browser notification

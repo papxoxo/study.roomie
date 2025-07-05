@@ -1,6 +1,27 @@
+import { useEffect, useState } from "react";
+import { db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { Users, Circle } from "lucide-react";
 
 export default function UserPresence({ users = [] }) {
+  const [avatars, setAvatars] = useState({});
+
+  useEffect(() => {
+    async function fetchAvatars() {
+      const newAvatars = {};
+      await Promise.all(users.map(async (user) => {
+        if (user.id) {
+          const snap = await getDoc(doc(db, "users", user.id));
+          if (snap.exists()) {
+            newAvatars[user.id] = snap.data().avatar;
+          }
+        }
+      }));
+      setAvatars(newAvatars);
+    }
+    if (users && users.length > 0) fetchAvatars();
+  }, [users]);
+
   return (
     <div className="bg-gray-800 rounded-lg p-4">
       <div className="flex items-center gap-2 mb-4">
@@ -18,9 +39,11 @@ export default function UserPresence({ users = [] }) {
           users.map((user, index) => (
             <div key={index} className="flex items-center gap-3 p-2 bg-gray-700 rounded-lg">
               <div className="relative">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                <img
+                  src={avatars[user.id] || "https://api.dicebear.com/7.x/bottts/svg?seed=default"}
+                  alt="avatar"
+                  className="w-8 h-8 rounded-full border-2 border-indigo-500 bg-gray-700"
+                />
                 <Circle 
                   className={`w-3 h-3 absolute -bottom-1 -right-1 ${
                     user.isOnline ? 'text-green-400 fill-green-400' : 'text-gray-500'

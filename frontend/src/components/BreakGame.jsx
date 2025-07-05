@@ -76,10 +76,8 @@ export default function BreakGame({ enabled = false }) {
     setUserInput(value);
     
     if (value === currentText) {
-      // Text completed, get new text
-      const newText = SAMPLE_TEXTS[Math.floor(Math.random() * SAMPLE_TEXTS.length)];
-      setCurrentText(newText);
-      setUserInput("");
+      // Text completed, end the game immediately
+      endGame();
     }
   };
 
